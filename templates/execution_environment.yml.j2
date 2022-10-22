@@ -1,0 +1,17 @@
+---
+version: 1
+build_arg_defaults:
+  EE_BASE_IMAGE: {{ base_image }}
+  EE_BUILDER_IMAGE: {{ builder_image }}
+
+ansible_config: ansible.cfg
+
+dependencies:
+{% if bindeps is defined and (bindeps|length )%}
+  system: bindep.txt
+{% endif %}
+{% if python_packages is defined and (python_packages|length )%}
+  python: requirements.txt
+{% endif %}
+  galaxy: requirements.yml
+

@@ -1,0 +1,76 @@
+# ------------------------------------------------------ ENVIRONMENT
+
+# All files will be generated in the build dir file :
+build_dir: /tmp
+
+# Generated image name and tag
+ee_name: ee-test
+ee_tag: 1.0
+
+# Set this to true if you want to push the generated image to the Automation HUB
+push_image_to_private_hub: True
+
+# Set this to true if you want to cleanup the build dir when finished.
+# ! Careful This will delete everything in the build dir !
+delete_all_when_finished: False
+
+# ------------------------------------------------------- CREDENTIAL
+
+# Controller Credentials
+# Used to create Execution Environment in the Controller
+controller_host: <CONTROLLER_HOSTNAME_OR_IP>
+controller_username: admin
+controller_password: <PASSWORD>
+private_hub_credential_in_controller: <GALAXY_CREDENTIAL_NAME_IN_CONTROLLER>
+
+
+# Private HUB Credentials
+private_hub_host: <HUB_HOSTNAME_OR_IP>
+private_hub_token: <TOKEN>
+private_hub_username: admin
+private_hub_password: <PASSWORD>
+private_hub_validate_certs: False
+
+
+# Credentials of the builder image source regsitry
+builder_image_registry_username: <REDHAT_ACCOUNT_USERNAME>
+builder_image_registry_password: <PASSWORD>
+builder_image: registry.redhat.io/ansible-automation-platform-22/ansible-builder-rhel8:latest
+base_image: registry.redhat.io/ansible-automation-platform-22/ee-minimal-rhel8:latest
+
+# ------------------------------------------------------- IMAGE
+  
+# Set this to True if you want to create the in Controller
+create_new_ee_in_controller: True
+
+# List of the binaries to be installed on the generated image
+bindeps:
+  - "vi [platform:rpm]"
+
+# Ansible collections to installed in the generated image
+collections:
+  - name: ansible.posix
+    version: 1.4.0
+  - name: community.general
+    version: 5.6.0
+  - name: redhat.satellite
+  - name: redhat.satellite_operations
+
+# Python packages to be installed in the generated image
+python_packages:
+  - netaddr
+
+# Set to True to use the custom Containerfile templates/Containerfile.j2
+# Should be always True
+use_custom_container_file: True
+
+# Set to True and fill in proxy details if you need a proxy to reach internet (needed to install binaries, python packages and ansible collection.)
+use_proxy: False
+http_proxy: http://proxy_hostname:proxy_port
+https_proxy: http://proxy_hostname:proxy_port
+no_proxy: .internal.domain
+
+
+# Set this to False if Base image is already locally present (to speed things up a bit)
+pull_base_image: True
+

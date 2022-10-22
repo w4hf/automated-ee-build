@@ -1,0 +1,7 @@
+{% if python_packages is defined %}
+{%      if python_packages|length %}
+{% for item in python_packages %}
+{{ item }}
+{% endfor %}
+{%      endif %}
+{% endif %}

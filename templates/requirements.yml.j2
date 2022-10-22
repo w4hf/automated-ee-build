@@ -1,0 +1,11 @@
+{% if collections is defined %}
+{% if collections|length %}
+collections:
+{% for item in collections %}
+- name: {{ item.name }}
+{% if item.version is defined %}
+  version: {{ item.version }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endif %}

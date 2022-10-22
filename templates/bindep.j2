@@ -1,0 +1,7 @@
+{% if bindeps is defined %}
+{%      if bindeps|length %}
+{% for item in bindeps %}
+{{ item }}
+{% endfor %}
+{%      endif %}
+{% endif %}

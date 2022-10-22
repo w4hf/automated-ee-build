@@ -1,0 +1,108 @@
+---
+- name: Set new EE full name
+  ansible.builtin.set_fact:
+    ee_full_name: "{{ private_hub_host }}/{{ ee_name }}:{{ ee_tag }}"
+
+- name: Set working (context) dir
+  ansible.builtin.set_fact:
+    context_dir: "{{ build_dir }}/{{ ee_name }}"
+
+- name: Create build folder
+  ansible.builtin.file:
+    state: directory
+    path: "{{ item }}"
+  loop:
+    - "{{ build_dir }}"
+    - "{{ context_dir }}"
+
+- name: Pull builder images
+  containers.podman.podman_image:
+    name: "{{ item }}"
+    username: "{{ builder_image_registry_username | default(omit, true) }}"
+    password: "{{ builder_image_registry_password | default(omit, true) }}"
+    validate_certs: "{{ ee_validate_certs | default(omit) }}"
+    force: true
+  loop:
+    - "{{ base_image }}"
+    - "{{ builder_image }}"
+  when: pull_base_image
+
+- name: ensure bindep file is rendered
+  ansible.builtin.template:
+    src: templates/bindep.j2
+    dest: "{{ context_dir }}/bindep.txt"
+    mode: '0644'
+  when: bindeps is defined
+
+- name: Ensure python file is rendered
+  ansible.builtin.template:
+    src: python.j2
+    dest: "{{ context_dir }}/requirements.txt"
+    mode: '0644'
+  when: python_packages is defined
+
+- name: Ensure requirements file is rendered
+  ansible.builtin.template:
+    src: requirements.yml.j2
+    dest: "{{ context_dir }}/requirements.yml"
+    mode: '0644'
+  when: (collections is defined) or (roles is defined)
+
+- name: Ensure ansible.cfg is rendered
+  ansible.builtin.template:
+    src: ansible.cfg.j2
+    dest: "{{ context_dir }}/ansible.cfg"
+    mode: '0644'
+
+- name: Create EE definition file
+  ansible.builtin.template:
+    src: execution_environment.yml.j2
+    dest: "{{ context_dir }}/execution-environment.yml"
+    mode: '0644'
+
+- name: Run the Ansible Builder Program
+  ansible.builtin.command: "ansible-builder create"
+  args:
+    chdir: "{{ context_dir }}/"
+  changed_when: true   # these will always run and will always report “changed” otherwise
+
+- name: Copy custom Container file
+  ansible.builtin.template:
+    src: templates/Containerfile.j2
+    dest: "{{ context_dir }}/context/Containerfile"
+  when: use_custom_container_file
+
+- name: Push image to registry
+  containers.podman.podman_image:
+    name: "{{ ee_full_name }}"
+    path: "{{ context_dir }}/context/"
+    pull: false
+    push: "{{ push_image_to_private_hub }}"
+    username: "{{ private_hub_username | default(omit, true) }}"
+    password: "{{ private_hub_password | default(omit, true) }}"
+    auth_file: "{{ ee_auth_file | default(omit, true) }}"
+    executable: "{{ ee_executable | default(omit, true) }}"
+    ca_cert_dir: "{{ ee_ca_cert_dir | default(omit) }}"
+    validate_certs: "{{ private_hub_validate_certs | default(omit) }}"
+    push_args:
+      dest: "{{ private_hub_host }}"
+      sign_by: "{{ ee_sign_by | default(omit) }}"
+    build_args:
+      extra_args: "--layers=false"
+
+- name: Add EE to the controller 
+  awx.awx.execution_environment:
+    controller_host: "{{ controller_host }}"
+    controller_username : "{{ controller_username }}"
+    controller_password : "{{ controller_password }}"
+    name: "{{ ee_name }}"
+    image: "{{ ee_full_name }}"
+    credential: "{{ private_hub_credential_in_controller }}"
+    validate_certs: False
+
+- name: Empty build directory
+  ansible.builtin.file:
+    state: absent
+    path: "{{ context_dir }}"
+  when: delete_all_when_finished
+...

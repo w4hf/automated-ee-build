@@ -1,0 +1,19 @@
+[galaxy]
+server_list = automation_hub_cert,ansible_galaxy,automation_hub_pub,automation_hub_comm
+ignore_certs = yes
+
+[galaxy_server.automation_hub_cert]
+url=https://{{ private_hub_host }}/api/galaxy/content/rh-certified/
+token={{ private_hub_token }}
+
+[galaxy_server.automation_hub_pub]
+url=https://{{ private_hub_host }}/api/galaxy/content/published/
+token={{ private_hub_token }}
+
+[galaxy_server.automation_hub_comm]
+url=https://{{ private_hub_host }}/api/galaxy/content/community/
+token={{ private_hub_token }}
+
+[galaxy_server.ansible_galaxy]
+url=https://galaxy.ansible.com
+

@@ -1,0 +1,7 @@
+---
+- hosts: localhost
+  gather_facts: false
+  vars_files:
+    - vars/ee.yml
+  tasks:
+    - ansible.builtin.import_tasks: tasks/00_ee-build.yml
